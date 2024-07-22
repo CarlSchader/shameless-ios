@@ -14,57 +14,18 @@ extension UIApplication {
     }
 }
 
+struct UserMessage: Codable {
+    let message: String
+}
+
 struct Log: Identifiable, Codable {
     let id: UUID
-    let text: String
-    let date: Date
+    let timestamp: Double
+    let type: String
+    let payload: Data
 }
 
-let apiHost = "http://localhost:8000"
-
-func fetchLogs(endpointUrl: String) -> Array<Log> {
-    print("fetching logs")
-    var logs: Array<Log> = []
-    let url = URL(string: endpointUrl)!
-
-    let task = URLSession.shared.dataTask(with: url) { data, response, error in
-        if let error = error {
-            print(error.localizedDescription)
-        }
-        if let data = data {
-            do {
-                logs = try JSONDecoder().decode(Array<Log>.self, from: data)
-                print(logs)
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-    }
-    task.resume()
-    return logs
-}
-
-func postLog(log: Log, endpointUrl: String, onSuccess: () -> () = {}) {
-    let url = URL(string: endpointUrl)!
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-    do {
-       let jsonData = try JSONEncoder().encode(log)
-       request.httpBody = jsonData
-    } catch let error {
-       print(error.localizedDescription)
-    }
-    
-    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            print(error.localizedDescription)
-        }
-    }
-    task.resume()
-    onSuccess()
-}
+let API_HOST = "http://192.168.86.240:8000"
 
 struct ContentView: View {
     private let dateformat = DateFormatter()
@@ -72,9 +33,51 @@ struct ContentView: View {
     @State private var logs: Array<Log> = []
     @State private var input: String = ""
     
+    private func fetchLogs() {
+        let url = URL(string: API_HOST)!
+        var newLogs: [Log] = []
+
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                debugPrint(error.localizedDescription)
+            }
+            if let data = data {
+                do {
+                    newLogs = try JSONDecoder().decode(Array<Log>.self, from: data)
+                    self.logs = newLogs
+                } catch {
+                    debugPrint(error.localizedDescription)
+                }
+            }
+        }
+        task.resume()
+    }
+
+    private func postLog(log: Log, onSuccess: () -> () = {}) {
+        let url = URL(string: API_HOST)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+           let jsonData = try JSONEncoder().encode(log)
+           request.httpBody = jsonData
+        } catch let error {
+            debugPrint(error.localizedDescription)
+        }
+        
+        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                debugPrint(error.localizedDescription)
+            }
+        }
+        task.resume()
+        onSuccess()
+    }
+    
     private func onEnter() {
-        let newLog = Log(id: UUID(), text: input, date: Date())
-        postLog(log: newLog, endpointUrl: apiHost + "/log", onSuccess: {
+        let newLog = Log(id: UUID(), payload: input.data(using: .utf8) ?? Data(), timestamp: Double(Date().timeIntervalSince1970))
+        self.postLog(log: newLog, onSuccess: {
             self.logs.append(newLog)
         })
         self.input = ""
@@ -83,9 +86,9 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            List(logs) { log in
+            List(self.$logs) { log in
                 HStack {
-                    Text(dateformat.string(from: log.date))
+                    Text(dateformat.string(from: Date(timeIntervalSince1970: log.timestamp)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(log.text)
@@ -109,9 +112,8 @@ struct ContentView: View {
     
     
     init() {
-        print("init")
         self.dateformat.dateFormat = "HH:mm"
-        self.logs = fetchLogs(endpointUrl: apiHost + "/logs")
+        self.fetchLogs()
     }
 }
 
