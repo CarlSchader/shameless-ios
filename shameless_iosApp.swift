@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Foundation
+import BackgroundTasks
 
 @main
 struct shameless_iosApp: App {
@@ -15,3 +17,4 @@ struct shameless_iosApp: App {
         }
     }
 }
+

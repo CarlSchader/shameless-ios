@@ -14,95 +14,47 @@ extension UIApplication {
     }
 }
 
-struct UserMessage: Codable {
-    let message: String
-}
-
-struct Log: Identifiable, Codable {
-    let id: UUID
-    let timestamp: Double
-    let type: String
-    let payload: Data
-}
-
-let API_HOST = "http://192.168.86.240:8000"
-
 struct ContentView: View {
-    private let dateformat = DateFormatter()
+    private let dateformat = DateFormatter();
 
-    @State private var logs: Array<Log> = []
-    @State private var input: String = ""
+    @State private var logs: Array<Log>
+    @State private var input: String
     
-    private func fetchLogs() {
-        let url = URL(string: API_HOST)!
-        var newLogs: [Log] = []
-
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
-                debugPrint(error.localizedDescription)
-            }
-            if let data = data {
-                do {
-                    newLogs = try JSONDecoder().decode(Array<Log>.self, from: data)
-                    self.logs = newLogs
-                } catch {
-                    debugPrint(error.localizedDescription)
-                }
-            }
-        }
-        task.resume()
-    }
-
-    private func postLog(log: Log, onSuccess: () -> () = {}) {
-        let url = URL(string: API_HOST)!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        do {
-           let jsonData = try JSONEncoder().encode(log)
-           request.httpBody = jsonData
-        } catch let error {
-            debugPrint(error.localizedDescription)
-        }
-        
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                debugPrint(error.localizedDescription)
-            }
-        }
-        task.resume()
-        onSuccess()
-    }
     
     private func onEnter() {
-        let newLog = Log(id: UUID(), payload: input.data(using: .utf8) ?? Data(), timestamp: Double(Date().timeIntervalSince1970))
-        self.postLog(log: newLog, onSuccess: {
-            self.logs.append(newLog)
-        })
-        self.input = ""
+        let newLog = Log(
+            id: UUID(),
+            timestamp: Double(Date().timeIntervalSince1970),
+            payload: LogPayload.userMessage(UserMessage(message: self.input)),
+            type: LogType.userMessage.rawValue
+        );
         
+        writeLogs(logs: [newLog]);
+        self.logs.append(newLog);
+
+        self.input = "";
     }
     
     var body: some View {
         VStack {
-            List(self.$logs) { log in
+            List(self.logs) { log in
                 HStack {
                     Text(dateformat.string(from: Date(timeIntervalSince1970: log.timestamp)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(log.text)
+                    Text(log.payloadString())
                 }
             }
             .listRowSpacing(5.0)
             .scrollContentBackground(.hidden)
             
             HStack {
-                Text(">")
+                Text(">");
                 TextField("jogged 2 miles, finished assignment, ...", text: self.$input)
                     .onSubmit(self.onEnter)
+                    .defersSystemGestures(on: .vertical);
             }
-            Divider()
+            Divider();
         }
         .padding()
         .onTapGesture { // close keyboard on tapout
@@ -112,8 +64,11 @@ struct ContentView: View {
     
     
     init() {
-        self.dateformat.dateFormat = "HH:mm"
-        self.fetchLogs()
+        self.dateformat.dateFormat = "HH:mm";
+        let newLogs = readLogs(limit: 100, offset: 0);
+        
+        _logs = State(initialValue: newLogs);
+        _input = State(initialValue: "");
     }
 }
 
