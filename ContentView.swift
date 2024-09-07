@@ -22,16 +22,15 @@ struct ContentView: View {
     
     
     private func onEnter() {
-        let newLog = Log(
-            id: UUID(),
-            timestamp: Double(Date().timeIntervalSince1970),
-            payload: LogPayload.userMessage(UserMessage(message: self.input)),
-            type: LogType.userMessage.rawValue
-        );
+        if let payload = self.input.data(using: .utf8) {
+            let newLog = Log(
+                timestamp: Double(Date().timeIntervalSince1970),
+                payload: payload
+            )
+            
+            self.logs.append(newLog);
+        }
         
-        writeLogs(logs: [newLog]);
-        self.logs.append(newLog);
-
         self.input = "";
     }
     
@@ -62,12 +61,10 @@ struct ContentView: View {
         }
     }
     
-    
     init() {
         self.dateformat.dateFormat = "HH:mm";
-        let newLogs = readLogs(limit: 100, offset: 0);
         
-        _logs = State(initialValue: newLogs);
+        _logs = State(initialValue: []);
         _input = State(initialValue: "");
     }
 }
