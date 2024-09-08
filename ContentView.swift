@@ -32,8 +32,8 @@ struct ContentView: View {
                 do {
                     try await postLogs(logs: [newLog])
                     self.logs.append(newLog)
-                } catch let e {
-                    debugPrint(e)
+                } catch {
+                    print(error)
                 }
             }
         }
@@ -53,7 +53,7 @@ struct ContentView: View {
             }
             .listRowSpacing(5.0)
             .scrollContentBackground(.hidden)
-            
+                
             HStack {
                 Text(">");
                 TextField("jogged 2 miles, finished assignment, ...", text: self.$input)
@@ -67,12 +67,16 @@ struct ContentView: View {
             UIApplication.shared.endEditing()
         }
         .task {
-            self.logs = mergeLogLists(logs1: self.logs, logs2: await fetchLogs())
+            let fetchedLogs = await fetchLogs()
+            let locationLogs = getLocationLogs()
+            self.logs = mergeLogLists(logs1: locationLogs, logs2: fetchedLogs)
+            do { try await postLogs(logs: self.logs) } catch { print(error) }
         }
     }
     
     init() {
-        self.dateformat.dateFormat = "YYYY-HH:mm";
+        self.dateformat.dateFormat = "MMM d, h:mm a";
+        getLocationAuthorization(delegate: self)
     }
 }
 

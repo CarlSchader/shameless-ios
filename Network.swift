@@ -85,7 +85,7 @@ func postLogs(logs: [Log]) async throws {
     var request = URLRequest(url: url);
     request.httpMethod = "POST";
     request.setValue("Bearer " + TOKEN, forHTTPHeaderField: "AUTHORIZATION");
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type");   
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type");
     
     do {
         let body = try JSONEncoder().encode(logsToJsonLogs(logs: logs))
