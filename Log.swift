@@ -9,7 +9,7 @@ import Foundation
 
 struct Log: Identifiable {
     let id = UUID()
-    let timestamp: Double
+    let time: Int64
     let payload: Data
     
     func payloadString() -> String {
@@ -17,8 +17,6 @@ struct Log: Identifiable {
             return dataString;
         } else {
             return "UTF8 ENCODING ERROR";
-    }
+        }
     }
 }
-
-
