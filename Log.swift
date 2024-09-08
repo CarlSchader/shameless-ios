@@ -20,3 +20,13 @@ struct Log: Identifiable {
         }
     }
 }
+
+func mergeLogLists(logs1: [Log], logs2: [Log]) -> [Log] {
+    var merged: [Log] = []
+    merged.append(contentsOf: logs1)
+    merged.append(contentsOf: logs2)
+    merged.sort { (x: Log, y: Log) -> Bool in
+        return x.time < y.time
+    }
+    return merged
+}

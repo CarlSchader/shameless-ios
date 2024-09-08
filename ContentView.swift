@@ -15,7 +15,8 @@ extension UIApplication {
 }
 
 struct ContentView: View {
-    private let dateformat = DateFormatter();
+    private let dateformat = DateFormatter()
+    private var initialFetch = false
 
     @State private var logs: Array<Log> = []
     @State private var input: String = ""
@@ -24,11 +25,17 @@ struct ContentView: View {
     private func onEnter() {
         if let payload = self.input.data(using: .utf8) {
             let newLog = Log(
-                time: Int64(Date().timeIntervalSince1970),
+                time: Int64(Date().timeIntervalSince1970 * 1_000_000),
                 payload: payload
             )
-            
-            self.logs.append(newLog);
+            Task {
+                do {
+                    try await postLogs(logs: [newLog])
+                    self.logs.append(newLog)
+                } catch let e {
+                    debugPrint(e)
+                }
+            }
         }
         
         self.input = "";
@@ -60,8 +67,7 @@ struct ContentView: View {
             UIApplication.shared.endEditing()
         }
         .task {
-            self.logs = await fetchLogs(from: 0);
-            print(self.logs)
+            self.logs = mergeLogLists(logs1: self.logs, logs2: await fetchLogs())
         }
     }
     
