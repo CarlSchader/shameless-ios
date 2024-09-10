@@ -70,7 +70,7 @@ struct ContentView: View {
             let fetchedLogs = await fetchLogs()
             let locationLogs = getLocationLogs()
             self.logs = mergeLogLists(logs1: locationLogs, logs2: fetchedLogs)
-            do { try await postLogs(logs: self.logs) } catch { print(error) }
+            do { try await postLogs(logs: locationLogs) } catch { print(error) }
         }
     }
     
