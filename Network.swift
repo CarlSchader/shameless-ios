@@ -7,22 +7,24 @@
 
 import Foundation
 
-let API_HOST = "https://server-689132874253.us-west1.run.app"
-let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTQwMDIsImV4cCI6MTcyNzkxODAwMn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.J6EsyR6s7j8V2OFrVE6Yk8j4zm6WnqzV95UEeMBavBk" // prod
+//let API_HOST = "https://server-689132874253.us-west1.run.app"
+//let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTQwMDIsImV4cCI6MTcyNzkxODAwMn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.J6EsyR6s7j8V2OFrVE6Yk8j4zm6WnqzV95UEeMBavBk" // prod
 
-//let API_HOST = "http://172.20.10.2:8000"
-//let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjU3MzM0MTYsImV4cCI6MTcyNjU5NzQxNn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.ulGnLkOLTt7WF_xQEItpS1tAwIyyQ3m01-c2m8Xdgxw" // local
+let API_HOST = "http://192.168.8.95:8000"
+let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTg3MzEsImV4cCI6MTcyNzkyMjczMX0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.i3aDVosl7Z5IIk5W-9O1-TjvUDf4PitIVdc71rHh4cM" // local
 
 let DAY_IN_MICROSECONDS: Int64 = 1_000_000 * 3600 * 24
 
 struct JsonLog: Codable {
     let time: Int64
     let payload: String // base64 encoded
+    let tag: String
     
     func toLog() -> Log {
         return Log(
             time: self.time,
-            payload: Data(base64Encoded: self.payload) ?? Data()
+            payload: Data(base64Encoded: self.payload) ?? Data(),
+            tag: self.tag
         );
     }
 }
@@ -30,7 +32,11 @@ struct JsonLog: Codable {
 func logsToJsonLogs(logs: [Log]) -> [JsonLog] {
     var jsonLogs: [JsonLog] = []
     for log in logs {
-        jsonLogs.append(JsonLog(time: log.time, payload: log.payload.base64EncodedString()))
+        jsonLogs.append(JsonLog(
+            time: log.time,
+            payload: log.payload.base64EncodedString(),
+            tag: log.tag
+        ))
     }
     return jsonLogs
 }

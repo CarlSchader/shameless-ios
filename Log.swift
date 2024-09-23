@@ -11,10 +11,15 @@ struct Log: Identifiable {
     let id = UUID()
     let time: Int64
     let payload: Data
+    let tag: String
     
     func payloadString() -> String {
         if let dataString = String(data: self.payload, encoding: .utf8) {
-            return dataString;
+            if self.tag != "" {
+                return self.tag + ": " + dataString;
+            } else {
+                return dataString;
+            }
         } else {
             return "UTF8 ENCODING ERROR";
         }

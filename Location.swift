@@ -67,7 +67,7 @@ class LocationDataManager : NSObject, ObservableObject, CLLocationManagerDelegat
         let time = Int64(location.timestamp.timeIntervalSince1970 * 1_000_000)
         
         do {
-            logs.append(Log(time: time, payload: try CoordinatePayload(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude).toPayload()))
+//            logs.append(Log(time: time, payload: try CoordinatePayload(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude).toPayload()))
         } catch {
             print(error)
         }

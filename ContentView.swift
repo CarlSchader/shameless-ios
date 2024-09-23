@@ -26,7 +26,8 @@ struct ContentView: View {
         if let payload = self.input.data(using: .utf8) {
             let newLog = Log(
                 time: Int64(Date().timeIntervalSince1970 * 1_000_000),
-                payload: payload
+                payload: payload,
+                tag: "utf-8"
             )
             Task {
                 do {
