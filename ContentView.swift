@@ -68,15 +68,16 @@ struct ContentView: View {
         }
         .task {
             let fetchedLogs = await fetchLogs()
-            let locationLogs = getLocationLogs()
-            self.logs = mergeLogLists(logs1: locationLogs, logs2: fetchedLogs)
-            do { try await postLogs(logs: locationLogs) } catch { print(error) }
+            self.logs = fetchedLogs
+//            let locationLogs = getLocationLogs()
+//            self.logs = mergeLogLists(logs1: locationLogs, logs2: fetchedLogs)
+//            do { try await postLogs(logs: locationLogs) } catch { print(error) }
         }
     }
     
     init() {
         self.dateformat.dateFormat = "MMM d, h:mm a";
-        getLocationAuthorization(delegate: self)
+//        getLocationAuthorization(delegate: self)
     }
 }
 

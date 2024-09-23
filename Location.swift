@@ -35,7 +35,7 @@ class LocationDataManager : NSObject, ObservableObject, CLLocationManagerDelegat
             break
         case .authorizedAlways:
             break
-        case .restricted .denied:
+        case .restricted:
             break
         case .denied:
             break
