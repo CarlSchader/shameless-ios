@@ -6,12 +6,34 @@
 //
 
 import Foundation
+import GRPCCore
+import GRPCHTTP2Transport
 
+// prod
 let API_HOST = "https://server-689132874253.us-west1.run.app"
-let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTQwMDIsImV4cCI6MTcyNzkxODAwMn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.J6EsyR6s7j8V2OFrVE6Yk8j4zm6WnqzV95UEeMBavBk" // prod
+let GRPC_API_HOST = "https://server-grpc-689132874253.us-west1.run.app"
+let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTQwMDIsImV4cCI6MTcyNzkxODAwMn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.J6EsyR6s7j8V2OFrVE6Yk8j4zm6WnqzV95UEeMBavBk"
 
+// local
 //let API_HOST = "http://192.168.8.95:8000"
-//let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTg3MzEsImV4cCI6MTcyNzkyMjczMX0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.i3aDVosl7Z5IIk5W-9O1-TjvUDf4PitIVdc71rHh4cM" // local
+//let TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IjAwMDEiLCJpc3MiOiJCYXNoIEpXVCBHZW5lcmF0b3IiLCJpYXQiOjE3MjcwNTg3MzEsImV4cCI6MTcyNzkyMjczMX0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJOYW1lIjoidGVzdHkgbWN0ZXN0ZXIifQ.i3aDVosl7Z5IIk5W-9O1-TjvUDf4PitIVdc71rHh4cM"
+
+@available(iOS 18.0, *)
+var shamelessClient: Shameless_ShamelessServiceClient? = nil
+
+func runGrpcClient() async throws {
+    if #available(iOS 18.0, *) {
+        let grpcClient = try GRPCClient(
+            transport: .http2NIOPosix(
+                target: .ipv4(host: GRPC_API_HOST),
+                config: .defaults(transportSecurity: .plaintext)
+            )
+        )
+        shamelessClient = Shameless_ShamelessServiceClient(wrapping: grpcClient)
+    } else {
+        throw MessageError.messageError("ios version must be 18.0^ to use grpc");
+    }
+}
 
 let DAY_IN_MICROSECONDS: Int64 = 1_000_000 * 3600 * 24
 
@@ -44,6 +66,14 @@ func logsToJsonLogs(logs: [Log]) -> [JsonLog] {
 func fetchLogs(from: Int64?=nil) async -> [Log] {
     var logs: [Log] = [];
     let from: Int64 = from ?? (Int64(Date().timeIntervalSince1970) * 1_000_000 - DAY_IN_MICROSECONDS);
+    
+    if #available(iOS 18.0, *) {
+        if shamelessClient != nil {
+            shamelessClient?.getLogs(Shameless_GetLogsRequest(
+                
+            ))
+        }
+    }
     
     let urlString = API_HOST + "/api/v1/logs?from=\(from)";
     

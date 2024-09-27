@@ -17,7 +17,8 @@ extension UIApplication {
 struct ContentView: View {
     private let dateformat = DateFormatter()
     private var initialFetch = false
-
+    
+    @State private var errorMessage: String? = nil
     @State private var logs: Array<Log> = []
     @State private var input: String = ""
     
@@ -26,15 +27,15 @@ struct ContentView: View {
         if let payload = self.input.data(using: .utf8) {
             let newLog = Log(
                 time: Int64(Date().timeIntervalSince1970 * 1_000_000),
-                payload: payload,   
+                payload: payload,
                 tag: "utf-8"
             )
             Task {
                 do {
                     try await postLogs(logs: [newLog])
                     self.logs.append(newLog)
-                } catch {
-                    print(error)
+                } catch let error {
+                    self.errorMessage = error.localizedDescription
                 }
             }
         }
@@ -67,7 +68,17 @@ struct ContentView: View {
         .onTapGesture { // close keyboard on tapout
             UIApplication.shared.endEditing()
         }
+        .alert(isPresented: .constant(self.errorMessage != nil)) {
+            Alert(title: Text("Error"), message: Text(errorMessage!.debugDescription), dismissButton: .default(Text("Ok")) {
+                self.errorMessage = nil
+            })
+        }
         .task {
+            do {
+                try await runGrpcClient()
+            } catch let error {
+                self.errorMessage = error.localizedDescription
+            }
             let fetchedLogs = await fetchLogs()
             self.logs = fetchedLogs
 //            let locationLogs = getLocationLogs()
