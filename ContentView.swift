@@ -35,6 +35,7 @@ struct ContentView: View {
                     try await postLogs(logs: [newLog])
                     self.logs.append(newLog)
                 } catch let error {
+                    debugPrint(error)
                     self.errorMessage = error.localizedDescription
                 }
             }
@@ -76,11 +77,11 @@ struct ContentView: View {
         .task {
             do {
                 try await runGrpcClient()
+                let fetchedLogs = try await fetchLogs()
+                self.logs = fetchedLogs
             } catch let error {
                 self.errorMessage = error.localizedDescription
             }
-            let fetchedLogs = await fetchLogs()
-            self.logs = fetchedLogs
 //            let locationLogs = getLocationLogs()
 //            self.logs = mergeLogLists(logs1: locationLogs, logs2: fetchedLogs)
 //            do { try await postLogs(logs: locationLogs) } catch { print(error) }
